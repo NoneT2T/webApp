@@ -8,14 +8,14 @@ const config = {
         environment: process.env.NODE_ENV || 'development',
         sessionSecret: process.env.SESSION_SECRET || 'ice-mine-super-secret-key-2026',
         adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
-        publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
+        publicUrl: process.env.PUBLIC_URL || 'https://webapp-production-cbb6.up.railway.app/',
     },
 
     // ==================== НАСТРОЙКИ БОТА ====================
     bot: {
         token: process.env.BOT_TOKEN || '',
-        webappUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
-        botUsername: process.env.BOT_USERNAME || 'icemine_bot',
+        webappUrl: process.env.PUBLIC_URL || 'https://webapp-production-cbb6.up.railway.app/',
+        botUsername: process.env.BOT_USERNAME || 'nonetrpg_bot',
     },
 
     // ==================== НАСТРОЙКИ БАЗЫ ДАННЫХ ====================
