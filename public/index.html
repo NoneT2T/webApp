@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ice Mine</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Верхняя панель -->
+        <div class="top-panel">
+            <div class="user-profile" onclick="openProfileModal()">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar">
+                <span id="settingsName">Player</span>
+            </div>
+            <div class="action-icons">
+                <div class="action-icon" onclick="openDailyBonusModal()">
+                    <span class="icon-emoji">📅</span>
+                    <div class="icon-badge" id="dailyBonusBadge" style="display:none;">!</div>
+                </div>
+                <div class="action-icon" onclick="openWheelModal()">
+                    <span class="icon-emoji">🎡</span>
+                    <div class="icon-badge" id="wheelBadge" style="display:none;">!</div>
+                </div>
+                <div class="action-icon" onclick="openQuestsModal()">
+                    <span class="icon-emoji">📋</span>
+                    <div class="icon-badge" id="questsBadge" style="display:none;">!</div>
+                </div>
+                <div class="action-icon" onclick="openAchievementsModal()">
+                    <span class="icon-emoji">🏆</span>
+                    <div class="icon-badge" id="achievementsBadge">0/0</div>
+                </div>
+                <!-- Новая иконка скинов -->
+                <div class="action-icon" onclick="openSkinsModal()">
+                    <span class="icon-emoji">🎨</span>
+                    <div class="icon-badge" id="skinsBadge">0/5</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-row">
+            <div class="energy-display" id="energyDisplay">⚡ 100/100</div>
+            <div class="profit-display" id="profitPerHour">+0/ч</div>
+        </div>
+
+        <!-- Баланс -->
+        <div class="balance-container" id="balanceContainer" data-show-balance="true">
+            <div class="balance-amount" id="balance">0</div>
+        </div>
+
+        <!-- Ранг -->
+        <div class="rank-container" id="rankContainer" data-show-rank="true" onclick="showRankInfo()">
+            <span class="rank-icon" id="rankIcon">🥉</span>
+            <span class="rank-name" id="rankName">bronza</span>
+            <span class="rank-level" id="rankLevel">1 / 10</span>
+            <span class="rank-info-icon">ℹ️</span>
+        </div>
+
+        <!-- Контент -->
+        <div class="content-area">
+            <!-- Игра -->
+            <div class="tab-content active" id="gameTab" data-show-balance="true" data-show-rank="true">
+                <div class="ice-cube-container">
+                    <div class="ice-cube" id="mainIce">
+                        <div class="ice-cube-inner">
+                            <span class="ice-emoji">🧊</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>До следующего ранга</span>
+                        <span class="progress-target" id="nextRankRequirement">0 тапов</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Бустеры -->
+            <div class="tab-content" id="boostersTab" data-show-balance="true" data-show-rank="false">
+                <h3 class="section-title">Бесплатные ежедневные бустеры</h3>
+                <div class="free-boosters">
+                    <div class="booster-card free" onclick="useEnergyBoost()">
+                        <div class="booster-info">
+                            <div class="booster-name">Полная энергия</div>
+                            <div class="booster-available" id="freeBoostersCount">3/3 доступно</div>
+                        </div>
+                        <button class="refill-btn">Восполнить</button>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Бустеры</h3>
+                <div class="booster-card" onclick="buyBoost('multitap')">
+                    <div class="booster-info">
+                        <div class="booster-name">Мультитап</div>
+                        <div class="booster-level" id="multitapLevel">1 - 1 ур</div>
+                        <div class="booster-next" id="multitapNext">+1</div>
+                    </div>
+                    <button class="upgrade-btn">
+                        <span class="price" id="multitapPrice">100</span> ❄️
+                    </button>
+                </div>
+
+                <div class="booster-card" onclick="buyBoost('energy')">
+                    <div class="booster-info">
+                        <div class="booster-name">Лимит энергии</div>
+                        <div class="booster-level" id="energyLevel">100 - 1 ур</div>
+                        <div class="booster-next" id="energyNext">+50</div>
+                    </div>
+                    <button class="upgrade-btn">
+                        <span class="price" id="energyPrice">100</span> ❄️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Шахта -->
+            <div class="tab-content" id="mineTab" data-show-balance="true" data-show-rank="false">
+                <h2 class="upgrade-title">Улучшить добычу льда</h2>
+
+                <div class="upgrade-stats">
+                    <div class="stat-row">
+                        <span>Текущий доход/час:</span>
+                        <span class="stat-value" id="currentIcePerHour">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Стоимость улучшения:</span>
+                        <span class="stat-value" id="upgradeCost">0</span>
+                    </div>
+                    <div class="stat-row highlight">
+                        <span>Доход увеличится на:</span>
+                        <span class="stat-value" id="upgradeIncrease">+0</span>
+                    </div>
+                </div>
+
+                <button class="upgrade-action-btn" onclick="upgradeIceProduction()">Улучшить</button>
+            </div>
+
+            <!-- Топ -->
+            <div class="tab-content" id="leaderboardTab" data-show-balance="false" data-show-rank="false">
+                <div class="leaderboard-header-fixed">
+                    <h2 class="leaderboard-title">🏆 Топ игроков</h2>
+                    <p class="leaderboard-subtitle">Награды каждые 24 часа!</p>
+                </div>
+
+                <div class="leaderboard-categories">
+                    <div class="category-btn active" onclick="switchLeaderboardCategory('balance')">💰 Баланс</div>
+                    <div class="category-btn" onclick="switchLeaderboardCategory('taps')">👆 Тапы</div>
+                </div>
+
+                <div class="leaderboard-list-container">
+                    <div class="leaderboard-list" id="leaderboardList">
+                        <div style="text-align:center;color:#8e9ab3;padding:20px;">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Друзья -->
+            <div class="tab-content" id="friendsTab" data-show-balance="false" data-show-rank="false">
+                <div class="friends-header">
+                    <h2 class="friends-title">Пригласи друзей!</h2>
+                    <p class="friends-subtitle">Ты и твой друг получите бонусы</p>
+                </div>
+
+                <div class="invite-card" onclick="inviteFriend('normal')">
+                    <div class="invite-icon">💰</div>
+                    <div class="invite-info">
+                        <div class="invite-name">Пригласить друга</div>
+                        <div class="invite-reward">+5,000 тебе и другу</div>
+                    </div>
+                </div>
+
+                <div class="invite-card premium" onclick="inviteFriend('premium')">
+                    <div class="invite-icon">⭐️</div>
+                    <div class="invite-info">
+                        <div class="invite-name">Пригласить друга с Telegram Premium</div>
+                        <div class="invite-reward">+25,000 тебе и другу</div>
+                    </div>
+                </div>
+
+                <div class="more-bonuses" onclick="showReferralInfo()">Больше бонусов →</div>
+
+                <div class="friends-list">
+                    <div class="list-header">Список друзей</div>
+                    <div id="friendsListContent" class="empty-friends">Ты еще никого не пригласил</div>
+                </div>
+            </div>
+
+            <!-- Настройки -->
+            <div class="tab-content" id="settingsTab" data-show-balance="false" data-show-rank="false">
+                <div class="settings-header">
+                    <h2 class="settings-title">⚙️ Настройки</h2>
+                </div>
+
+                <div class="settings-profile-card">
+                    <div class="settings-profile-avatar">
+                        <img src="" alt="Avatar" class="settings-avatar-big" id="settingsAvatarBig">
+                        <div class="avatar-edit-overlay" onclick="changeAvatar()">📷</div>
+                    </div>
+                    <div class="settings-profile-info">
+                        <div class="settings-profile-name" id="settingsUserNameDisplay">Player</div>
+                        <div class="settings-profile-id" id="settingsUserIdSmall">ID: 0</div>
+                        <div class="settings-profile-badges">
+                            <span class="badge" id="settingsRankBadge">🥉 bronza</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-title">Аккаунт</div>
+                    <div class="setting-item clickable" onclick="openNameSettings()">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">👤</span>
+                            <span class="setting-item-label">Имя пользователя</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <span id="settingsUserName">Player</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">🆔</span>
+                            <span class="setting-item-label">ID пользователя</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <span id="settingsUserId">0</span>
+                        </div>
+                    </div>
+                    <div class="setting-item clickable" onclick="showReferralInfo()">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">🔗</span>
+                            <span class="setting-item-label">Мой реферальный код</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <span>Сгенерировать</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-title">Приложение</div>
+                    <div class="setting-item">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">📳</span>
+                            <span class="setting-item-label">Вибрация</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <label class="switch">
+                                <input type="checkbox" id="vibrationEnabled" checked onchange="toggleVibration()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-title">О проекте</div>
+                    <div class="setting-item">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">ℹ️</span>
+                            <span class="setting-item-label">Версия</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <span>2.0.0</span>
+                        </div>
+                    </div>
+                    <div class="setting-item clickable">
+                        <div class="setting-item-left">
+                            <span class="setting-item-icon">📞</span>
+                            <span class="setting-item-label">Поддержка</span>
+                        </div>
+                        <div class="setting-item-right">
+                            <span>↗</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-tab="game" onclick="switchMainTab('game')">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Игра</span>
+            </div>
+            <div class="nav-item" data-tab="boosters" onclick="switchMainTab('boosters')">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Буст</span>
+            </div>
+            <div class="nav-item" data-tab="mine" onclick="switchMainTab('mine')">
+                <span class="nav-icon">⛏️</span>
+                <span class="nav-label">Шахта</span>
+            </div>
+            <div class="nav-item" data-tab="leaderboard" onclick="switchMainTab('leaderboard')">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Топ</span>
+            </div>
+            <div class="nav-item" data-tab="friends" onclick="switchMainTab('friends')">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">Друзья</span>
+            </div>
+            <div class="nav-item" data-tab="settings" onclick="switchMainTab('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Настройки</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div class="notifications-container" id="notifications"></div>
+
+    <!-- Офлайн заработок -->
+    <div class="offline-earnings" id="offlineEarnings">
+        <div class="offline-content">
+            <div class="offline-icon">💰</div>
+            <div class="offline-info">
+                <div class="offline-title">Пока вас не было</div>
+                <div class="offline-amount" id="offlineAmount">+0</div>
+            </div>
+            <button class="offline-close" onclick="closeOfflineEarnings()">✕</button>
+        </div>
+    </div>
+
+    <!-- Анти-чит -->
+    <div class="anti-cheat-badge" id="antiCheatBadge">🛡️ Анти-чит активен</div>
+
+    <!-- Профиль модалка -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content profile-modal-content">
+            <div class="modal-header">
+                <h3>Профиль игрока</h3>
+                <button class="close-btn" onclick="closeProfileModal()">✕</button>
+            </div>
+            <div class="modal-body profile-modal-body">
+                <div class="profile-header">
+                    <img src="" alt="Avatar" class="profile-avatar" id="profileAvatar">
+                    <div>
+                        <div class="profile-name" id="profileName">Player</div>
+                        <div class="profile-id" id="profileId">ID: 0</div>
+                    </div>
+                </div>
+
+                <div class="profile-stats-compact">
+                    <div class="profile-stat-compact">
+                        <span class="stat-icon-compact">💰</span>
+                        <div class="stat-info-compact">
+                            <div class="stat-label-compact">Баланс</div>
+                            <div class="stat-value-compact" id="profileBalance">0</div>
+                        </div>
+                    </div>
+                    <div class="profile-stat-compact">
+                        <span class="stat-icon-compact">👆</span>
+                        <div class="stat-info-compact">
+                            <div class="stat-label-compact">Тапы</div>
+                            <div class="stat-value-compact" id="profileTaps">0</div>
+                        </div>
+                    </div>
+                    <div class="profile-stat-compact">
+                        <span class="stat-icon-compact">🏆</span>
+                        <div class="stat-info-compact">
+                            <div class="stat-label-compact">Ранг</div>
+                            <div class="stat-value-compact" id="profileRank">bronza</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section promo-section">
+                    <h4 style="margin-bottom:12px;color:#4facfe;">🎫 Промокод</h4>
+                    <div class="promo-input-group">
+                        <input type="text" class="promo-input" id="promoInput" placeholder="Введите код">
+                        <button class="promo-btn" onclick="activatePromo()" style="margin-top:10px;width:100%;">Активировать</button>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h4 style="margin-bottom:12px;color:#4facfe;">Статистика</h4>
+                    <div class="stats-detail-compact">
+                        <div class="detail-row-compact">
+                            <span>Доход в час:</span>
+                            <span id="profileHourlyIncome">0</span>
+                        </div>
+                        <div class="detail-row-compact">
+                            <span>Достижения:</span>
+                            <span id="profileAchievementsCount">0/0</span>
+                        </div>
+                        <div class="detail-row-compact">
+                            <span>Выполнено заданий:</span>
+                            <span id="profileQuestsCount">0/0</span>
+                        </div>
+                        <div class="detail-row-compact">
+                            <span>Последняя награда:</span>
+                            <span id="profileLastReward">Нет</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ранги модалка -->
+    <div class="modal" id="rankModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ранги</h3>
+                <button class="close-btn" onclick="closeRankModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="current-rank-info" id="currentRankInfo">Загрузка...</div>
+                <div class="ranks-list" id="ranksList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Колесо модалка -->
+    <div class="modal" id="wheelModal">
+        <div class="modal-content wheel-modal-content">
+            <div class="modal-header">
+                <h3>🎡 Колесо удачи</h3>
+                <button class="close-btn" onclick="closeWheelModal()">✕</button>
+            </div>
+            <div class="modal-body wheel-modal-body">
+                <div class="wheel-info">
+                    <div class="free-spin-timer">
+                        <span class="timer-text">Бесплатно через</span>
+                        <span class="timer-value" id="wheelNextFree">00:00</span>
+                    </div>
+                </div>
+
+                <div class="wheel-container">
+                    <div class="wheel-pointer">▼</div>
+                    <canvas id="wheelCanvas" width="280" height="280"></canvas>
+                </div>
+
+                <div class="wheel-actions">
+                    <button class="wheel-spin-btn" id="wheelFreeSpinBtn" onclick="spinWheel('free')">🎡 Бесплатно (0/3)</button>
+                </div>
+
+                <div class="wheel-history">
+                    <div class="history-title">Последние выигрыши:</div>
+                    <div class="history-list" id="wheelHistoryList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скины модалка -->
+    <div class="modal" id="skinsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎨 Скины куба</h3>
+                <button class="close-btn" onclick="closeSkinsModal()">✕</button>
+            </div>
+            <div class="modal-body skins-modal-body" id="skinsList"></div>
+        </div>
+    </div>
+
+    <!-- Достижения модалка -->
+    <div class="modal" id="achievementsModal">
+        <div class="modal-content achievements-modal-content">
+            <div class="modal-header">
+                <h3>🏆 Достижения</h3>
+                <button class="close-btn" onclick="closeAchievementsModal()">✕</button>
+            </div>
+            <div class="modal-body achievements-modal-body" id="achievementsList"></div>
+        </div>
+    </div>
+
+    <!-- Задания модалка -->
+    <div class="modal" id="questsModal">
+        <div class="modal-content quests-modal-content">
+            <div class="modal-header">
+                <h3>📋 Ежедневные задания</h3>
+                <button class="close-btn" onclick="closeQuestsModal()">✕</button>
+            </div>
+            <div class="modal-body quests-modal-body">
+                <div id="questsList"></div>
+                <div class="quest-timer" id="questsTimer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ежедневный бонус модалка -->
+    <div class="modal" id="dailyBonusModal">
+        <div class="modal-content daily-bonus-modal-content">
+            <div class="modal-header">
+                <h3>📅 Ежедневный бонус</h3>
+                <button class="close-btn" onclick="closeDailyBonusModal()">✕</button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Рефералы модалка -->
+    <div class="modal" id="referralModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔗 Мой реферальный код</h3>
+                <button class="close-btn" onclick="closeReferralModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:center;color:#8e9ab3;margin-bottom:15px;">Ваш уникальный код:</p>
+                <div class="referral-code-box" id="referralCodeDisplay">XXXXXX</div>
+                <button class="copy-btn" onclick="copyReferralCode()">📋 Копировать код</button>
+
+                <div class="referral-stats">
+                    <div class="stat-row">
+                        <span>👥 Приглашено друзей:</span>
+                        <span id="referralCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>💰 Заработано:</span>
+                        <span id="referralEarned">0 льда</span>
+                    </div>
+                </div>
+
+                <div class="referral-bonuses">
+                    <h4>🎁 Бонусы за рефералов:</h4>
+                    <div class="bonus-item">
+                        <span class="referral-level">👤 1 уровень (друзья)</span>
+                        <span>+5,000 ❄️</span>
+                    </div>
+                    <div class="bonus-item">
+                        <span class="referral-level">👥 2 уровень (друзья друзей)</span>
+                        <span>+1,000 ❄️</span>
+                    </div>
+                    <div class="bonus-item">
+                        <span class="referral-level">⭐️ Telegram Premium</span>
+                        <span>+25,000 ❄️</span>
+                    </div>
+                </div>
+
+                <p style="text-align:center;color:#8e9ab3;font-size:12px;margin-top:15px;">
+                    🔗 Делитесь ссылкой: <span id="referralLink" style="color:#4facfe;">t.me/icemine_bot?start=XXXXXX</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Имя модалка -->
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Изменить имя</h3>
+                <button class="close-btn" onclick="closeNameModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="name-input" id="newNameInput" placeholder="Введите новое имя">
+                <button class="save-btn" onclick="saveNewName()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аватарка модалка -->
+    <div class="modal" id="avatarModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Выберите аватарку</h3>
+                <button class="close-btn" onclick="closeAvatarModal()">✕</button>
+            </div>
+            <div class="modal-body avatar-modal-body">
+                <div class="avatar-grid">
+                    <div class="avatar-option" onclick="selectAvatar('default')">
+                        <img src="${AVATAR_PRESETS['default']}" alt="Default">
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('ice')">
+                        <img src="${AVATAR_PRESETS['ice']}" alt="Ice">
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('diamond')">
+                        <img src="${AVATAR_PRESETS['diamond']}" alt="Diamond">
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('crown')">
+                        <img src="${AVATAR_PRESETS['crown']}" alt="Crown">
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('fire')">
+                        <img src="${AVATAR_PRESETS['fire']}" alt="Fire">
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('star')">
+                        <img src="${AVATAR_PRESETS['star']}" alt="Star">
+                    </div>
+                </div>
+
+                <div class="avatar-upload-section">
+                    <p>Или загрузите свою</p>
+                    <button class="upload-btn" onclick="document.getElementById('avatarUpload').click()">📷 Загрузить фото</button>
+                    <input type="file" id="avatarUpload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
