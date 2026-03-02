@@ -13,7 +13,7 @@ const config = {
 
     // ==================== НАСТРОЙКИ БОТА ====================
     bot: {
-        token: process.env.BOT_TOKEN || '',
+        token: process.env.BOT_TOKEN || '8712242463:AAFYhPR558ibbOgVyId5o4-_wxWLg4HBwY8',
         webappUrl: process.env.PUBLIC_URL || 'https://webapp-production-cbb6.up.railway.app/',
         botUsername: process.env.BOT_USERNAME || 'nonetrpg_bot',
     },
